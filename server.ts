@@ -4,11 +4,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: process.env.STUDIO_ENV_PATH || (process.env.STUDIO_DATA_DIR ? path.join(process.env.STUDIO_DATA_DIR, '.env') : undefined) });
+dotenv.config({
+  path: process.env.STUDIO_ENV_PATH || undefined
+});
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const __dirname = process.env.STUDIO_APP_DIR || path.dirname(__filename);
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
