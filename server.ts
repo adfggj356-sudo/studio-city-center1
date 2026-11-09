@@ -1,11 +1,10 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: process.env.STUDIO_ENV_PATH || (process.env.STUDIO_DATA_DIR ? path.join(process.env.STUDIO_DATA_DIR, '.env') : undefined) });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -127,15 +126,17 @@ app.get('/api/health', (_req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    app.use(express.static(path.join(__dirname, 'dist')));
+    const staticRoot = path.basename(__filename) === 'server.mjs' ? __dirname : path.join(__dirname, 'dist');
+    app.use(express.static(staticRoot));
     app.get('*', (_req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+      res.sendFile(path.join(staticRoot, 'index.html'));
     });
   }
 
