@@ -3,27 +3,67 @@ const { app, BrowserWindow, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const http = require('node:http');
-const { pathToFileURL } = require('node:url');
+const { spawn } = require('node:child_process');
 
 const PORT = 3210;
 let mainWindow;
+let serverProcess;
 
-function waitForServer(url, attempts = 60) {
+function waitForServer(attempts = 60) {
   return new Promise((resolve, reject) => {
     let count = 0;
-    const check = () => {
-      const request = http.get(url, (response) => {
-        response.resume();
-        resolve();
+
+    function check() {
+      const req = http.get(`http://127.0.0.1:${PORT}/api/health`, res => {
+        res.resume();
+        if (res.statusCode === 200) resolve();
+        else retry();
       });
-      request.on('error', () => {
-        count += 1;
-        if (count >= attempts) return reject(new Error('Local application server did not start.'));
-        setTimeout(check, 500);
-      });
-      request.setTimeout(1000, () => request.destroy());
-    };
+
+      req.on('error', retry);
+      req.setTimeout(1500, () => req.destroy());
+
+      function retry() {
+        count++;
+        if (count >= attempts) {
+          reject(new Error('Server startup timeout'));
+        } else {
+          setTimeout(check, 500);
+        }
+      }
+    }
+
     check();
+  });
+}
+
+function startServer() {
+  const dataDir = app.getPath('userData');
+  fs.mkdirSync(dataDir, { recursive: true });
+
+  const envPath = path.join(dataDir, '.env');
+
+  if (!fs.existsSync(envPath)) {
+    fs.writeFileSync(envPath, 'GEMINI_API_KEY=\n', 'utf8');
+  }
+
+  const serverPath = path.join(app.getAppPath(), 'dist', 'server.cjs');
+
+  serverProcess = spawn(process.execPath, [serverPath], {
+    env: {
+      ...process.env,
+      ELECTRON_RUN_AS_NODE: '1',
+      NODE_ENV: 'production',
+      PORT: String(PORT),
+      STUDIO_APP_DIR: app.getAppPath(),
+      STUDIO_ENV_PATH: envPath
+    },
+    stdio: 'ignore',
+    windowsHide: true
+  });
+
+  serverProcess.on('error', error => {
+    console.error('Server process error:', error);
   });
 }
 
@@ -49,37 +89,22 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   try {
-    process.env.NODE_ENV = 'production';
-    process.env.PORT = String(PORT);
-    process.env.STUDIO_DATA_DIR = app.getPath('userData');
-    process.env.STUDIO_ENV_PATH = path.join(process.env.STUDIO_DATA_DIR, '.env');
-
-    fs.mkdirSync(process.env.STUDIO_DATA_DIR, { recursive: true });
-
-    if (!fs.existsSync(process.env.STUDIO_ENV_PATH)) {
-      fs.writeFileSync(
-        process.env.STUDIO_ENV_PATH,
-        '# Add your Gemini API key after the equals sign\nGEMINI_API_KEY=\n',
-        'utf8'
-      );
-    }
-
-    require('dotenv').config({ path: process.env.STUDIO_ENV_PATH });
-
-    await import(
-      pathToFileURL(path.join(app.getAppPath(), 'dist', 'server.mjs')).href
-    );
-
-    await waitForServer(`http://127.0.0.1:${PORT}/api/health`);
+    startServer();
+    await waitForServer();
     createWindow();
-
   } catch (error) {
     console.error(error);
     dialog.showErrorBox(
-      'تعذر تشغيل ستوديو ستي سنتر',
-      'لم يتمكن البرنامج من تشغيل الخادم المحلي. أعد تثبيت البرنامج أو تواصل مع الدعم الفني.'
+      'ستوديو ستي سنتر',
+      'تعذر تشغيل خادم البرنامج. يرجى إعادة تثبيت البرنامج.'
     );
     app.quit();
+  }
+});
+
+app.on('before-quit', () => {
+  if (serverProcess && !serverProcess.killed) {
+    serverProcess.kill();
   }
 });
 
