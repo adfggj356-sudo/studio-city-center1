@@ -1,51 +1,48 @@
+
 {
   "name": "studio-city-center",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server.mjs",
-    "start": "tsx server.ts",
-    "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
-    "dist": "npm run build && electron-builder --win nsis"
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/server.cjs",
+    "dist": "npm run build && electron-builder --win nsis",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/canvas-confetti": "^1.9.0",
-    "@types/jszip": "^3.4.0",
-    "@vitejs/plugin-react": "^6.1.1",
-    "canvas-confetti": "^1.9.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "jszip": "^3.10.2",
-    "lucide-react": "^0.546.0",
-    "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "vite": "^8.3.0"
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24"
   },
   "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/express": "^4.17.21",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12",
     "esbuild": "^0.25.0",
-    "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "@types/express": "^4.17.21",
-    "electron": "^40.0.0",
-    "electron-builder": "^26.0.12"
+    "vite": "^8.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3"
   },
-  "main": "electron/main.cjs",
   "build": {
-    "appId": "com.studiocitycenter.app",
-    "productName": "Studio City Center",
-    "asar": true,
+    "appId": "com.citycenter.studio",
+    "productName": "ستوديو ستي سنتر",
     "directories": {
       "output": "release"
     },
@@ -58,19 +55,13 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
-      ],
-      "artifactName": "Studio-City-Center-Setup-${version}.${ext}"
+      ]
     },
     "nsis": {
       "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
