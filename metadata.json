@@ -1,0 +1,6 @@
+{
+  "name": "ستوديو ستي سنتر",
+  "description": "برنامج ستوديو ستي سنتر الاحترافي لمعالجة وتعديل الصور وقص A6 والتوضيح وزيادة الدقة إلى 1080 بكسل بجودة استوديو فائقة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
