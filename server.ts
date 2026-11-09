@@ -16,8 +16,9 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 app.use(express.json({ limit: '50mb' }));
 
 // Initialize Gemini Client
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
+const ai = process.env.GEMINI_API_KEY
+  ? new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {
     headers: {
       'User-Agent': 'aistudio-build',
